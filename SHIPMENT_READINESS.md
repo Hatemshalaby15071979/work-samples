@@ -3,18 +3,22 @@
 **Assessment date:** 2026-11-20
 **Branch:** `main`
 **Verified commit:** `fbd9eaa2348e4781a5b5dbeb248dcf2d6963fbd6` (`fbd9eaa`)
-**Remote:** `git@github.com:Hatemshalaby15071979/work-samples.git`
-**Working tree at assessment:** clean; no upstream tracking configured on `main`.
+**Remote:** `https://github.com/Hatemshalaby15071979/work-samples.git`
+**Pushed:** 2026-11-20, `c10955a939a1c5918cb2ada57273654051535e4c` (`c10955a`),
+after Hatem's explicit authorization. `main` tracks `origin/main`.
+**Working tree:** clean.
 
 This records local repository, CI-equivalent, evaluation, container, and secret
-checks. **No push, release, deployment, or external write was performed.** Pushing
-is an owner-only action under the project rules, so it is deliberately left to
-Hatem.
+checks, plus the completed push. No release, deployment, or external write beyond
+the push was performed.
 
 ## Weak results and open gaps (read first)
 
-1. **Nothing was pushed.** All work is committed locally at `fbd9eaa`. `main` has
-   no upstream set. A push is still required to make the repository public.
+1. **SSH authentication to GitHub does not work here.** Both local keys were
+   rejected with `Permission denied (publickey)`. The push was made over HTTPS
+   using the authenticated `gh` credential helper, and `origin` was switched from
+   SSH to HTTPS (a reversible local config change). To restore SSH pushes, add a
+   public key to the GitHub account.
 2. **GitHub-hosted CI was not observed.** Every check below was run locally with
    the same versions the workflow pins. A hosted run cannot be claimed from a
    local result.
@@ -73,15 +77,18 @@ local health check, then removes the container with `if: always()`.
 - **DID:** Completed and committed the pending hardening pass at `fbd9eaa` - safe
   local bind default, generator-failure escalation, HTTP body-drain guard, pinned
   dev tools, accurate test counts, filled MIT holders, screen-reader-friendly docs.
-  Added this readiness record.
+  Added this readiness record, then pushed `main` to `origin` with Hatem's explicit
+  authorization and corrected this file to match the shipped state.
 - **PROVED:** 6/6 local CI steps, 8/8 SQL checks, 106 tests, zero secret-pattern
-  hits in 69 tracked files across 23 commits. All commands and versions are above.
-- **NOT DONE:** No push; no hosted CI run; no cloud deployment; no external audit;
-  no end-to-end Ollama generation.
+  hits in 69 tracked files across 23 commits. Remote `refs/heads/main` and local
+  `HEAD` both read `c10955a939a1c5918cb2ada57273654051535e4c`.
+- **NOT DONE:** No hosted CI result confirmed; no cloud deployment; no external
+  audit; no end-to-end Ollama generation. SSH push remains unavailable.
 - **RISK:** Hidden CI-only failure is unlikely but not disproven; the adapter is
   unproven end to end; the evaluation's fitted thresholds limit how far the numbers
   generalise.
-- **DECIDE:** Push requires Hatem's explicit go-ahead. Recommendation: push `main`
-  to `origin` once he confirms. Default if he stays silent: leave it local.
-- **NEXT:** If he says "push", run `git push -u origin main` from this directory
-  and verify the hosted CI run on GitHub.
+- **DECIDE:** No push decision is pending - it was authorized and completed. The
+  only optional decision is whether to register an SSH key with GitHub.
+- **NEXT:** Check the hosted CI run on GitHub for commit `c10955a`. If SSH pushes
+  are wanted, add the public key from `~/.ssh/id_ed25519.pub` to the GitHub account
+  and restore the SSH remote URL.
