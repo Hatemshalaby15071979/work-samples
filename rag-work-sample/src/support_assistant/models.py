@@ -159,6 +159,7 @@ class DecisionReason(StrEnum):
     SUPERSEDED_UNRESOLVED = "superseded_unresolved"
     TOPIC_RETIRED = "topic_retired"
     DRAFT_MATERIAL = "draft_material"
+    GENERATOR_FAILED = "generator_failed"
 
 
 class GateOutcome(BaseModel):

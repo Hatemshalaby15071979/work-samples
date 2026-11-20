@@ -1,4 +1,4 @@
-# RAG / agent work sample — a support-policy assistant
+# Retrieval-Augmented Generation (RAG) / agent work sample - a support-policy assistant
 
 A local-only support assistant over a **synthetic** ferry-operator procedure corpus,
 with a labelled evaluation set and a measured comparison between the simplest
@@ -19,12 +19,18 @@ environment. Nothing new was installed.
 ```bash
 python run_eval.py                  # deterministic mock generator (default)
 python run_eval.py --calibrate      # sweep the gate's score floor
-python -m pytest                    # 105 tests, including the negative cases
+python -m pytest                    # 106 tests, including the negative cases
 python scripts/ci.py                # the same checks CI runs, run locally
 ```
 
-No install step. No network. The default run is hermetic and produces byte-identical
-output every time.
+The evaluation is hermetic once dependencies are installed. It does not call an external
+API or cloud service, and the default run produces byte-identical output every time.
+
+For a clean development environment, install the runtime and test tools from the project:
+
+```bash
+python -m pip install -e '.[dev]'
+```
 
 ### Run the service
 
@@ -48,13 +54,15 @@ curl -s -X POST http://127.0.0.1:8080/ask \
 
 ## Operational practices
 
+This table maps each operational concern to the implementation behavior the service provides.
+
 | Concern | Implementation |
 |---|---|
-| **Liveness** | `GET /health` — answers while the process serves. Says nothing about readiness. |
-| **Readiness** | `GET /ready` — 200 only once the corpus is loaded and indexed, 503 otherwise. A separate signal from liveness, because "process up" and "able to answer" are different failures. |
+| **Liveness** | `GET /health` - answers while the process serves. Says nothing about readiness. |
+| **Readiness** | `GET /ready` - 200 only once the corpus is loaded and indexed, 503 otherwise. A separate signal from liveness, because "process up" and "able to answer" are different failures. |
 | **Correlation** | `X-Request-Id` accepted from the caller or generated; echoed in the response body, the response header, and every log line the request produces. |
 | **Structured logs** | One JSON object per line on stdout, with `request_id`, `event`, `decision`, `reason`, `procedure_id`, `latency_ms`. |
-| **Redaction** | **Query text is not logged by default** — a digest and character count instead. Opting in (`SUPPORT_LOG_QUERY_TEXT=true`) redacts first. The redactor runs on the raw value, never on a formatted string. |
+| **Redaction** | **Query text is not logged by default** - a digest and character count instead. Opting in (`SUPPORT_LOG_QUERY_TEXT=true`) redacts first. The redactor runs on the raw value, never on a formatted string. |
 | **No input echo** | A rejected body is never reflected back. Validation failures return a generic message and log only the event. |
 | **Body limit** | 64 KB, enforced before parsing. |
 | **Timeouts** | Per-request budget; exceeding it returns 504 rather than hanging a worker. |
@@ -64,11 +72,13 @@ curl -s -X POST http://127.0.0.1:8080/ask \
 | **Non-root** | Runs as uid 10001. |
 | **Graceful shutdown** | SIGTERM handler, with `stop_grace_period` giving it time to run. |
 | **Dependency locking** | `requirements.txt` pins the direct dependency *and* its transitive dependencies to the versions the committed report was produced against. |
-| **Rollback** | Stateless, writes nothing, no migration to reverse. Rollback is a version change — see [`docs/RUNBOOK.md`](docs/RUNBOOK.md). |
+| **Rollback** | Stateless, writes nothing, no migration to reverse. Rollback is a version change - see [`docs/RUNBOOK.md`](docs/RUNBOOK.md). |
 | **CI** | `.github/workflows/ci.yml`, mirrored by `scripts/ci.py`. Format, lint, typecheck, tests, evaluation report, container build. **No deploy step and no credential.** |
-| **Cloud mapping** | [`docs/CLOUD_MAPPING.md`](docs/CLOUD_MAPPING.md) — **a design exercise, explicitly not performed.** |
+| **Cloud mapping** | [`docs/CLOUD_MAPPING.md`](docs/CLOUD_MAPPING.md) - **a design exercise, explicitly not performed.** |
 
 ### What was actually executed
+
+This table lists the checks completed locally and their results.
 
 Every row below was run locally, not asserted:
 
@@ -77,14 +87,14 @@ Every row below was run locally, not asserted:
 | Format | `ruff format --check .` | 23 files already formatted |
 | Lint | `ruff check .` | All checks passed |
 | Types | `mypy src --ignore-missing-imports` | No issues in 10 source files |
-| Tests | `pytest` | **105 passed** in 1.11 s |
+| Tests | `pytest` | **106 passed** |
 | Evaluation | `python run_eval.py` | report matches `expected/` |
 | Image build | `docker build` | succeeded, 202 MB |
 | Container health | `docker run` + `curl /health` | healthy after 5 attempts |
-| Container endpoints | `curl /ready`, `/version`, `/ask` | all correct — answer, abstain, escalate, 422 |
+| Container endpoints | `curl /ready`, `/version`, `/ask` | all correct - answer, abstain, escalate, 422 |
 | Query text in logs | `docker logs \| grep` | **0 occurrences** |
 | Non-root | `docker exec id` | `uid=10001(appuser)` |
-| Read-only filesystem | `docker run --read-only` + `touch` | `Read-only file system` — refused |
+| Read-only filesystem | `docker run --read-only` + `touch` | `Read-only file system` - refused |
 
 `scripts/ci.py` runs all six steps and reports `6/6 steps passed`.
 
@@ -102,17 +112,29 @@ never used by the default run**, because a model makes the metrics non-reproduci
 and a clean clone without Ollama cannot reproduce the committed report.
 
 **The adapter is implemented but NOT verified end to end.** In the environment this was
-built in, Ollama 0.34.0 was running and served `/api/tags` and `/api/version`, but a
-trivial generation (`"Say OK."`, 8 tokens) timed out at **120 s via raw curl** and at
-**300 s through the adapter**, and `/api/ps` reported **no model loaded in memory** —
-the first call has to load a 4.7 GB model from disk. The adapter's error and timeout
-paths are covered by tests; a completed generation was never observed.
+built in, Ollama 0.34.0 was running and served `/api/tags` and `/api/version`. A trivial
+generation (`"Say OK."`, 8 tokens) timed out at **120 s via raw curl** and at **300 s
+through the adapter**. `/api/ps` reported **no model loaded in memory**, so the first
+call has to load a 4.7 GB model from disk. The adapter's error and timeout paths are
+covered by tests; a completed generation was never observed.
 
 **LLM output quality is therefore untested.** That is stated rather than glossed over.
 
 ---
 
 ## What it does
+
+BM25 is a lexical ranking algorithm that scores procedure text by matching query terms
+and rewarding rarer, more informative matches.
+
+For each query, the service validates the input and uses BM25 to retrieve procedures.
+Deterministic safety rules then check the strongest result. The service answers with a
+citation only when evidence meets the threshold. It abstains when there is no evidence.
+It escalates for draft, retired, ambiguous, or conflicting procedures. Consequential
+actions are proposed for human approval and never executed automatically.
+
+<details>
+<summary>Original workflow diagram</summary>
 
 ```
 query ──▶ validate ──▶ BM25 retrieve ──▶ GATE ──┬──▶ answer + citation ──▶ (consequential action?)
@@ -122,9 +144,13 @@ query ──▶ validate ──▶ BM25 retrieve ──▶ GATE ──┬──�
                                                                conflicting / ambiguous)
 ```
 
+</details>
+
 Two strategies are implemented and compared over the same 36 labelled queries:
 
-| | Strategy | Behaviour |
+This table compares the two retrieval and decision strategies used in the evaluation.
+
+| Variant | Strategy | Behaviour |
 |---|---|---|
 | **A** | `RetrievalOnlyBaseline` | Retrieve, then always answer with the top hit. No gate, no refusal path. |
 | **B** | `SupportAssistant` | The same retrieval, then a deterministic gate, citations, and a human-approval boundary. |
@@ -136,10 +162,12 @@ and it is what most first implementations actually are.
 
 ## Results
 
+This table summarizes the baseline and gated workflow across the evaluation metrics.
+
 36 labelled cases, 15 procedures, mock generator. Full report in
 [`expected/eval_report.txt`](expected/eval_report.txt).
 
-| Metric | A — baseline | B — workflow |
+| Metric | A - baseline | B - workflow |
 |---|---|---|
 | Decision accuracy | 0.3611 (13/36) | **0.7778 (28/36)** |
 | Retrieval recall@5 | 0.8000 | 0.8000 |
@@ -151,7 +179,7 @@ and it is what most first implementations actually are.
 ### What the gate buys, measured
 
 The baseline answers everything. So every conflicting, outdated and out-of-scope
-question becomes an **unsupported answer** — 16 of them, 44% of the set. The gate
+question becomes an **unsupported answer** - 16 of them, 44% of the set. The gate
 removes all 16. That is the entire argument for a gate, and it is a measurement rather
 than a claim.
 
@@ -166,9 +194,11 @@ That tension is real and is the most interesting thing in the report.
 
 ---
 
-## Findings — including the ones that reflect badly on the sample
+## Findings - including the ones that reflect badly on the sample
 
 ### 1. Lexical retrieval cannot handle paraphrase
+
+This table compares retrieval and workflow results across each query category.
 
 | Category | Baseline | Workflow |
 |---|---|---|
@@ -183,7 +213,7 @@ retrieve it, no matter how good the gate is. The paraphrased category exists to 
 exactly this, and it does.
 
 Note the direction of travel: the workflow scores **worse** on paraphrased than the
-baseline (2/8 vs 3/8). That is not a regression — it is the gate working. The baseline
+baseline (2/8 vs 3/8). That is not a regression - it is the gate working. The baseline
 guesses and occasionally lands on the right document by accident; the gate refuses when
 the evidence is weak. Against a label that says "should answer", refusing scores as an
 error. Against the safety metric, it scores as a success.
@@ -194,11 +224,14 @@ precisely so that its failure is visible and attributable rather than assumed.
 ### 2. The absolute BM25 score is a poor confidence signal for short queries
 
 The gate's floor is an absolute score, and absolute BM25 scores depend on query length
-and term rarity. A short but perfectly legitimate question — *"How long do refunds take
-to reach my account?"* — scores 2.90 and abstains, while a longer question on the same
+and term rarity. A short but perfectly legitimate question - *"How long do refunds take
+to reach my account?"* - scores 2.90 and abstains, while a longer question on the same
 topic scores 11.5 and answers. The floor is not scale-free.
 
 The calibration sweep makes this inspectable rather than hidden:
+
+The calibration table compares three BM25 score floors and shows decision accuracy,
+unsupported answers, and the correct abstention and escalation counts.
 
 ```
   min_score   decision_acc   unsupported   abstain_ok   escalate_ok
@@ -216,7 +249,7 @@ that costs.
 ### 3. The conflict rule detects duplicate coverage, not disagreement
 
 Rule 5 escalates when a topic has more than one *live* procedure. That is a count, not
-a semantic comparison — two live procedures on the same topic could agree, and the gate
+a semantic comparison - two live procedures on the same topic could agree, and the gate
 would still escalate. The corpus is constructed so duplicate coverage and genuine
 contradiction coincide, which is convenient and is a limitation. Real contradiction
 detection needs to read the text.
@@ -233,14 +266,14 @@ limitations section and is not hidden behind the numbers.
 
 **No orchestration framework.** LangGraph was not installed and was not requested. The
 workflow is an explicit state machine in `workflow.py`. For a graph this small a
-framework would add a dependency and a version surface without adding a capability —
+framework would add a dependency and a version surface without adding a capability -
 and the brief for this sample explicitly asked for the simplest thing that compares
 honestly against a baseline.
 
 **The mock generator is extractive, and that is the point.** `MockAnswerGenerator`
 returns the procedure's own opening sentences and adds nothing. An extractive answer
 *cannot* hallucinate, so every unsupported answer in the evaluation is attributable to
-the gate letting a bad match through — never to the generator inventing content. That
+the gate letting a bad match through - never to the generator inventing content. That
 separation is what makes the failure analysis possible.
 
 **The approval gate fails closed, and the interesting case is a mismatch.** An approval
@@ -263,6 +296,11 @@ byte-checked.
 
 ## Layout
 
+The project contains the procedure corpus, labelled evaluation queries and expected report, ten Python modules under `src/support_assistant`, unit tests, local CI runner and GitHub workflow, Docker files, documentation, and the evaluation harness.
+
+<details>
+<summary>Original project file tree</summary>
+
 ```
 rag-work-sample/
 ├── corpus/harbourline_procedures.json   15 synthetic procedures, with lifecycle traps
@@ -277,7 +315,7 @@ rag-work-sample/
 │   ├── config.py         environment configuration, validated
 │   ├── logging_utils.py  JSON logs, correlation ids, redaction
 │   └── service.py        HTTP surface (stdlib only)
-├── tests/                105 tests across seven files
+├── tests/                106 tests across seven files
 ├── scripts/ci.py         local CI runner — mirrors the workflow
 ├── .github/workflows/ci.yml
 ├── Dockerfile            non-root, pinned, healthcheck
@@ -290,7 +328,11 @@ rag-work-sample/
 └── pyproject.toml
 ```
 
+</details>
+
 ### The corpus contains deliberate traps
+
+This table summarizes the deliberate procedure conflicts used to test the gate.
 
 | Trap | Procedure | What it tests |
 |---|---|---|
@@ -303,7 +345,7 @@ rag-work-sample/
 
 `answerable` (10) · `paraphrased` (8) · `conflicting` (5) · `outdated` (5) ·
 `out_of_scope` (8). Each case carries its expected decision, and where the expected
-outcome is an answer, the expected procedure — so a right decision citing the wrong
+outcome is an answer, the expected procedure - so a right decision citing the wrong
 document is not scored as a success.
 
 ---
@@ -316,7 +358,7 @@ document is not scored as a success.
 3. **Conflict detection is a count, not a comparison.** See Finding 3.
 4. **LLM output quality is untested.** The default generator is an extractive mock. The
    Ollama adapter is implemented and its failure paths are tested, but **no generation was
-   observed to complete** — see the note above. Treat it as unverified end to end.
+   observed to complete** - see the note above. Treat it as unverified end to end.
 5. **No human review of answer wording.** The approval gate covers consequential
    actions only.
 6. **Thresholds fitted on the test set.** See Finding 4.
@@ -327,16 +369,16 @@ document is not scored as a success.
 
 ### Operational limitations
 
-9. **No authentication and no rate limiting.** The service binds to `127.0.0.1` for that
+1. **No authentication and no rate limiting.** The service binds to `127.0.0.1` for that
    reason and must not be exposed. `docs/CLOUD_MAPPING.md` treats an authenticating layer
    as a hard requirement, not a configuration choice.
-10. **No metrics endpoint.** The structured fields a metric filter would need are emitted;
+2. **No metrics endpoint.** The structured fields a metric filter would need are emitted;
     nothing consumes them. Monitoring is designed, not implemented.
-11. **Health checking is shallow.** `/ready` verifies the corpus loaded. It does not check
+3. **Health checking is shallow.** `/ready` verifies the corpus loaded. It does not check
     any downstream dependency, because there is none.
-12. **The container is untested under load.** No concurrency, no memory pressure, no
+4. **The container is untested under load.** No concurrency, no memory pressure, no
     restart behaviour has been measured.
-13. **The cloud mapping is a document, not a deployment.** Nothing was provisioned.
+5. **The cloud mapping is a document, not a deployment.** Nothing was provisioned.
 
 ---
 
@@ -348,7 +390,7 @@ document is not scored as a success.
   mapping is a document.
 - **Not a deployed service.** The container runs on a developer machine and nowhere else.
 - Not a benchmark. The numbers describe this corpus and this evaluation set only.
-- Not a substitute for the author's existing portfolio work — it is a new, self-contained
+- Not a substitute for the author's existing portfolio work - it is a new, self-contained
   exercise over an unrelated corpus, built to demonstrate the evaluation discipline
   rather than to duplicate anything.
 

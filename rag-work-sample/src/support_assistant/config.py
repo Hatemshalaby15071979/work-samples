@@ -30,7 +30,7 @@ class Settings(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    host: str = Field(default="0.0.0.0")
+    host: str = Field(default="127.0.0.1")
     port: int = Field(default=8080, ge=1, le=65535)
 
     #: Whole-request budget for the workflow, in seconds.

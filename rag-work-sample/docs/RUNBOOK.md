@@ -1,4 +1,4 @@
-# Runbook — support-assistant work sample
+# Runbook - support-assistant work sample
 
 **Scope: local execution only.** This service runs on a developer machine. It has never
 been deployed to any environment, and nothing in this document describes production
@@ -8,6 +8,8 @@ undone.
 ---
 
 ## Prerequisites
+
+The following table summarizes the software and versions needed to run the service.
 
 | Requirement | Version used | Notes |
 |---|---|---|
@@ -52,6 +54,8 @@ curl -s http://127.0.0.1:8080/version
 
 ## Endpoints
 
+The following table describes the available HTTP endpoints and their purposes.
+
 | Method | Path | Meaning |
 |---|---|---|
 | `GET` | `/health` | **Liveness.** Returns 200 while the process is serving. Says nothing about readiness. |
@@ -60,6 +64,8 @@ curl -s http://127.0.0.1:8080/version
 | `POST` | `/ask` | Run one query. Body: `{"query": "..."}`. |
 
 ### `/ask` responses
+
+The following table explains the HTTP status codes returned for `/ask` requests.
 
 | Status | Meaning |
 |---|---|
@@ -72,9 +78,9 @@ curl -s http://127.0.0.1:8080/version
 
 `decision` is the operational signal, not just a field:
 
-- `answer` — the gate found one live procedure and cited it.
-- `escalate` — the match was unusable: conflicting, draft, retired, or ambiguous.
-- `abstain` — there was no evidence above the floor. **This is a successful outcome, not a
+- `answer` - the gate found one live procedure and cited it.
+- `escalate` - the match was unusable: conflicting, draft, retired, or ambiguous.
+- `abstain` - there was no evidence above the floor. **This is a successful outcome, not a
   failure.** The service refusing to guess is the product working.
 
 ---
@@ -84,9 +90,11 @@ curl -s http://127.0.0.1:8080/version
 Every value is read once, from the environment, in `config.py`. No other module reads the
 environment. Invalid values fail at startup rather than at first use.
 
+The following table lists the supported environment variables and their defaults.
+
 | Variable | Default | Meaning |
 |---|---|---|
-| `SUPPORT_HOST` | `0.0.0.0` | Bind address. |
+| `SUPPORT_HOST` | `127.0.0.1` | Bind address. |
 | `SUPPORT_PORT` | `8080` | Bind port. |
 | `SUPPORT_REQUEST_TIMEOUT_SECONDS` | `10` | Whole-request budget. Exceeding it returns 504. |
 | `SUPPORT_CLIENT_TIMEOUT_SECONDS` | `15` | Client read timeout. |
@@ -106,7 +114,7 @@ be added to `Settings` and deliberately excluded from `redacted_summary()`.
 ## Logs
 
 Structured JSON, one object per line on stdout. Fields: `ts`, `level`, `logger`, `message`,
-and — when applicable — `request_id`, `event`, `decision`, `reason`, `procedure_id`,
+and - when applicable - `request_id`, `event`, `decision`, `reason`, `procedure_id`,
 `latency_ms`.
 
 ### Correlation
@@ -125,7 +133,7 @@ log line carries a truncated digest and a character count instead:
 ```
 
 Setting `SUPPORT_LOG_QUERY_TEXT=true` opts in. Even then the text is redacted first, and the
-redactor runs on the raw value **before** formatting — never on a rendered string.
+redactor runs on the raw value **before** formatting - never on a rendered string.
 
 The redactor catches email addresses, card-like digit runs, and telephone numbers. It is
 **pattern-based and therefore incomplete**: it is best effort, not a guarantee. Do not treat
@@ -142,6 +150,8 @@ text.
 ---
 
 ## Failure modes and responses
+
+The following table maps common symptoms to likely causes and recommended actions.
 
 | Symptom | Likely cause | Action |
 |---|---|---|
@@ -186,7 +196,7 @@ environment-only, so no config rollback step exists.
 
 ### What rollback cannot fix
 
-If the **corpus** is the problem — a contradictory procedure set, or an empty one — rolling
+If the **corpus** is the problem - a contradictory procedure set, or an empty one - rolling
 back the code will not help. `/ready` will tell you the corpus loaded; `/ask` returning
 `escalate` for everything tells you the corpus is contradictory. Fix the corpus.
 

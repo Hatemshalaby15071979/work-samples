@@ -1,6 +1,6 @@
-# Estimate — man-days, assumptions, and ROI model
+# Estimate - man-days, assumptions, and ROI model
 
-> ## ⚠️ ILLUSTRATIVE ONLY — WORK SAMPLE
+> ## ILLUSTRATIVE ONLY - WORK SAMPLE
 >
 > **No figure in this document has been measured, researched, negotiated, or observed.**
 >
@@ -19,16 +19,16 @@
 
 ## 1. Estimation method
 
-**Bottom-up from deliverables, not by analogy.**
+### Bottom-up from deliverables, not by analogy
 
-Every man-day below traces to a named deliverable in `PROPOSAL.md` §8. The alternative —
-estimating by analogy to "a similar project" — is faster and produces a number that cannot
+Every man-day below traces to a named deliverable in `PROPOSAL.md` §8. The alternative -
+estimating by analogy to "a similar project" - is faster and produces a number that cannot
 be argued with, because there is nothing to inspect. Since the purpose of this document is
 to be inspectable, the slower method is used.
 
-**Three things the estimate deliberately does not do:**
+### Three things the estimate deliberately does not do
 
-1. **It does not hide the corpus work.** Corpus remediation is 17 of 84 man-days — 20% of
+1. **It does not hide the corpus work.** Corpus remediation is 17 of 84 man-days - 20% of
    the engagement and the largest single non-engineering line. Projects of this shape
    routinely under-estimate it or omit it, and then discover it mid-build.
 2. **It does not quote a rate.** See the disclaimer.
@@ -39,12 +39,14 @@ to be inspectable, the slower method is used.
 
 ## 2. Role definitions
 
+This table defines the engagement roles, their responsibilities, and why each is needed.
+
 | Role | What they do | Why the engagement needs them |
 |---|---|---|
 | **Engagement lead** | Owns the plan, the client relationship, the estimate, and the change control. Runs the workshop, writes the reports, presents the pilot result. | Single point of accountability. Without it, the corpus and engineering workstreams drift apart. |
-| **Domain SME (contact centre operations)** | Rules on the contested procedure, defines what "correct" means, reviews the labelled evaluation set, judges whether an answer is right. | **This is the role that cannot be substituted.** A retrieval engineer cannot decide which of two conflicting refund policies is correct. |
+| **Domain subject-matter expert (SME, contact centre operations)** | Rules on the contested procedure, defines what "correct" means, reviews the labelled evaluation set, judges whether an answer is right. | **This is the role that cannot be substituted.** A retrieval engineer cannot decide which of two conflicting refund policies is correct. |
 | **Retrieval / ML engineer** | Builds the index and the ranking, calibrates the gate threshold. | The core technical work. |
-| **Backend engineer** | The service, the endpoints, the operational plumbing — logging, health checks, timeouts. | Turns a model into something operable. |
+| **Backend engineer** | The service, the endpoints, the operational plumbing - logging, health checks, timeouts. | Turns a model into something operable. |
 | **Evaluation engineer** | Builds and maintains the labelled set, runs the harness, produces the failure analysis, keeps the metrics honest. | The role most often omitted. Without it, "it seems to work" is the only available evidence. |
 | **Compliance contact (operator-side)** | Signs off the data-handling position, the retention rule, and who may read an escalation. | Operator-side role, not billed. Their availability is a dependency, not a cost. |
 
@@ -52,7 +54,9 @@ to be inspectable, the slower method is used.
 
 ## 3. Work breakdown
 
-### Phase 0 — Discovery · 8 man-days · 1 week
+### Phase 0 - Discovery · 8 man-days · 1 week
+
+This table allocates the Phase 0 effort across roles and deliverables.
 
 | Role | Man-days | Deliverable |
 |---|---:|---|
@@ -62,7 +66,9 @@ to be inspectable, the slower method is used.
 | Compliance contact | 1 | Draft data-handling position |
 | **Total** | **8** | |
 
-### Phase 1 — Corpus remediation · 17 man-days · 3 weeks
+### Phase 1 - Corpus remediation · 17 man-days · 3 weeks
+
+This table allocates the Phase 1 effort across roles and deliverables.
 
 | Role | Man-days | Deliverable |
 |---|---:|---|
@@ -72,7 +78,9 @@ to be inspectable, the slower method is used.
 | Compliance contact | 2 | Sign-off on retention and access |
 | **Total** | **17** | |
 
-### Phase 2 — Build and calibrate · 38 man-days · 6 weeks
+### Phase 2 - Build and calibrate · 38 man-days · 6 weeks
+
+This table allocates the Phase 2 effort across roles and deliverables.
 
 | Role | Man-days | Deliverable |
 |---|---:|---|
@@ -83,7 +91,9 @@ to be inspectable, the slower method is used.
 | Domain SME | 3 | Evaluation-set review; correctness judgements |
 | **Total** | **38** | |
 
-### Phase 3 — Shadow-mode pilot · 14 man-days · 3 weeks
+### Phase 3 - Shadow-mode pilot · 14 man-days · 3 weeks
+
+This table allocates the Phase 3 effort across roles and deliverables.
 
 | Role | Man-days | Deliverable |
 |---|---:|---|
@@ -93,7 +103,9 @@ to be inspectable, the slower method is used.
 | Domain SME | 2 | Review of escalated cases |
 | **Total** | **14** | |
 
-### Phase 4 — Handover · 7 man-days · 2 weeks
+### Phase 4 - Handover · 7 man-days · 2 weeks
+
+This table allocates the Phase 4 effort across roles and deliverables.
 
 | Role | Man-days | Deliverable |
 |---|---:|---|
@@ -104,18 +116,22 @@ to be inspectable, the slower method is used.
 
 ### Totals
 
+This table reconciles the subtotal, contingency, and total estimate by phase.
+
 | Phase | Man-days |
 |---|---:|
-| 0 — Discovery | 8 |
-| 1 — Corpus remediation | 17 |
-| 2 — Build and calibrate | 38 |
-| 3 — Shadow-mode pilot | 14 |
-| 4 — Handover | 7 |
+| 0 - Discovery | 8 |
+| 1 - Corpus remediation | 17 |
+| 2 - Build and calibrate | 38 |
+| 3 - Shadow-mode pilot | 14 |
+| 4 - Handover | 7 |
 | **Subtotal** | **84** |
 | Contingency @ 15% (§5) | 13 |
 | **Total** | **97** |
 
-**By role:**
+#### By role
+
+This table summarises the engagement estimate by role and share of effort.
 
 | Role | Man-days | Share |
 |---|---:|---:|
@@ -128,7 +144,9 @@ to be inspectable, the slower method is used.
 | Compliance contact | 3 | 4% |
 | **Total** | **84** | |
 
-**The engineering lines are 42 of 84 man-days — exactly half.** The other half is domain
+### Engineering effort is exactly half of the estimate
+
+The engineering lines are 42 of 84 man-days - exactly half. The other half is domain
 judgement, evaluation, and coordination. An estimate that is 90% engineering is an estimate
 that has not accounted for the corpus.
 
@@ -139,15 +157,17 @@ that has not accounted for the corpus.
 Every assumption, its value, and **its basis**. The basis column is the important one: it
 distinguishes a placeholder from a fact.
 
+This table records every estimation assumption, its value, and its supporting basis.
+
 | # | Assumption | Value | Basis |
 |---|---|---|---|
-| A1 | Corpus size | ~15–100 procedures | **Illustrative.** The reference corpus has 15. Real operator corpora are larger; this is the single largest driver of Phase 1. |
+| A1 | Corpus size | ~15 to 100 procedures | **Illustrative.** The reference corpus has 15. Real operator corpora are larger; this is the single largest driver of Phase 1. |
 | A2 | Known contradictions in the corpus | At least 1 | **Derived** from the reference corpus, which was constructed with one. Real corpora have more. |
 | A3 | Proportion of procedures with a named owner | Unknown | **To be confirmed with the operator.** Assumed low; Phase 1 exists to fix it. |
 | A4 | Baseline metrics available at kick-off | Partially | **To be confirmed.** At least one is assumed missing, hence the baseline task in Phase 0. |
 | A5 | Languages in scope | 1 | **Assumed** for the estimate. Each additional language scales Phase 1 and Phase 2 superlinearly. |
-| A6 | Retrieval approach | Lexical (BM25) first | **Assumed.** Vector retrieval would add 4–6 man-days and a model dependency, and would improve paraphrase handling. |
-| A7 | Generative model in the answering path | No | **Assumed**, per `PROPOSAL.md` §5. Adding one adds 10–15 man-days plus ongoing cost. |
+| A6 | Retrieval approach | Lexical (BM25, a lexical ranking algorithm) first | **Assumed.** Vector retrieval would add 4 to 6 man-days and a model dependency, and would improve paraphrase handling. |
+| A7 | Generative model in the answering path | No | **Assumed**, per `PROPOSAL.md` §5. Adding one adds 10 to 15 man-days plus ongoing cost. |
 | A8 | Operator provides a redacted query sample | Yes | **To be confirmed.** Without it, calibration uses synthetic queries and the thresholds are unreliable. |
 | A9 | Operator provides a product owner with authority to rule | Yes | **To be confirmed.** Without it, the contradiction cannot be resolved and Phase 1 cannot exit. |
 | A10 | Deployment into the operator's production environment | Not in this estimate | **Excluded** per `PROPOSAL.md` §12. |
@@ -155,7 +175,7 @@ distinguishes a placeholder from a fact.
 | A12 | Team availability | Full-time, dedicated | **Assumed.** Part-time allocation extends elapsed time roughly proportionally. |
 | A13 | Elapsed duration | ~13 weeks | **Derived** from the phase plan with Phases 1 and 2 overlapping by 2 weeks. |
 
-**Facts versus estimates, separated:**
+### Facts versus estimates, separated
 
 - **Facts** (measured in the reference implementation, on synthetic data): the gate removed
   16 of 16 unsupported answers; paraphrased retrieval scored 2 of 8; non-English retrieval
@@ -169,7 +189,9 @@ None of the three categories is interchangeable with another.
 
 ## 5. Contingency
 
-| | Man-days |
+The contingency table reconciles the base estimate, contingency, and total.
+
+| Estimate component | Man-days |
 |---|---:|
 | Base estimate | 84 |
 | Contingency @ 15% | 13 |
@@ -208,15 +230,19 @@ where
 
 ### 6.2 Placeholder inputs
 
+This table defines the placeholder contact volume, handling time, and hourly cost used by the model.
+
 | Input | Placeholder | Basis |
 |---|---:|---|
-| V — annual contact volume | 250,000 | **Illustrative.** Not researched. |
-| AHT — handling time on lookup contacts | 300 s (5 min) | **Illustrative.** Not measured. |
-| c — fully-loaded cost per agent hour | 25 | **Illustrative placeholder, not a market rate.** Substitute the operator's own figure. |
+| V - annual contact volume | 250,000 | **Illustrative.** Not researched. |
+| AHT - handling time on lookup contacts | 300 s (5 min) | **Illustrative.** Not measured. |
+| c - fully-loaded cost per agent hour | 25 | **Illustrative placeholder, not a market rate.** Substitute the operator's own figure. |
 
 ### 6.3 Scenarios
 
 `s` and `r` are varied; `V`, `AHT` and `c` are held at their placeholders.
+
+This table compares conservative, base, and upside ROI outcomes under the varied assumptions.
 
 | Scenario | s | r | L | H (hours) | ΔH (hours) | Annual value |
 |---|---:|---:|---:|---:|---:|---:|
@@ -233,6 +259,8 @@ which the engagement pays back within one year**:
 Maximum blended day rate = Annual value / Total man-days
 ```
 
+This table translates each scenario's annual value into the maximum day rate that would achieve year-one payback.
+
 | Scenario | Annual value | Total man-days | Maximum blended day rate for year-one payback |
 |---|---:|---:|---:|
 | Conservative | 10,417 | 97 | **107** |
@@ -243,7 +271,9 @@ Maximum blended day rate = Annual value / Total man-days
 column, the engagement pays back in the first year under that scenario. If it is above, it
 does not. No rate is asserted; the reader supplies one.
 
-### 6.5 What the model does not include — and this matters more than the model
+### 6.5 What the model does not include - and this matters more than the model
+
+This table identifies value and cost factors omitted from the ROI model.
 
 | Omission | Why it matters |
 |---|---|
@@ -263,21 +293,23 @@ by 10%. Two consequences:
    before committing to any benefit case.
 2. **Precision here is false precision.** Reporting a value to four significant figures from
    three unmeasured inputs would imply a confidence the model does not have. The scenario
-   spread — 10,417 to 62,500 — is the honest output, and it is wide.
+   spread - 10,417 to 62,500 - is the honest output, and it is wide.
 
 ---
 
 ## 7. Change control
 
-Assessed on four axes — **corpus, evaluation, estimate, timeline** — before acceptance or
+Assessed on four axes - **corpus, evaluation, estimate, timeline** - before acceptance or
 rejection. Worked example in `PROPOSAL.md` §13.
+
+This table describes common change classes and the axis used to assess their impact.
 
 | Change class | Typical effect | Axis that catches it |
 |---|---|---|
-| Additional language | Phase 1 and 2 grow superlinearly | Corpus — a translation is a new controlled document, not a copy |
-| Generative answers added | +10–15 man-days, plus ongoing model cost | Evaluation — generated output needs its own evaluation design |
-| Vector retrieval instead of lexical | +4–6 man-days, plus a model dependency | Estimate — and it improves the paraphrase result, so it may be worth it |
-| Integration with the contact platform | Unbounded until scoped | Timeline — this is the classic unbounded change |
+| Additional language | Phase 1 and 2 grow superlinearly | Corpus - a translation is a new controlled document, not a copy |
+| Generative answers added | +10 to 15 man-days, plus ongoing model cost | Evaluation - generated output needs its own evaluation design |
+| Vector retrieval instead of lexical | +4 to 6 man-days, plus a model dependency | Estimate - and it improves the paraphrase result, so it may be worth it |
+| Integration with the contact platform | Unbounded until scoped | Timeline - this is the classic unbounded change |
 | Corpus grows by 10× | Phase 1 scales with the number of procedures, not linearly | Corpus |
 
 ---

@@ -10,11 +10,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# anyio is required, not optional-in-practice: 15 tests are `async def` marked
-# with @pytest.mark.anyio and conftest.py supplies an anyio_backend fixture.
-# Without the plugin pytest skips them with "async def functions are not natively
-# supported", which reads like a skip and is actually a failure.
-dev = ["pytest>=8", "anyio>=4"]
+# anyio is required, not optional-in-practice: async tests use
+# @pytest.mark.anyio and conftest.py supplies an anyio_backend fixture.
+# ruff and mypy are also used by scripts/ci.py and the GitHub workflow.
+dev = ["pytest>=8", "anyio>=4", "mypy>=1.10", "ruff==0.16.1"]
 
 [build-system]
 requires = ["setuptools>=68"]

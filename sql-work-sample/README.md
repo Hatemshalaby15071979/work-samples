@@ -1,4 +1,4 @@
-# SQL work sample — contact-centre operations
+# SQL work sample - contact-centre operations
 
 A small, self-contained SQL exercise: a synthetic contact-centre dataset, eight
 documented queries, and a test harness that rebuilds the database from scratch and
@@ -22,7 +22,7 @@ Standard library only. No dependency to install, no network, no cloud service.
 # 1. Rebuild the database from schema + seed, run all queries, check the results.
 python run_checks.py
 
-# 2. Regenerate the seed data (deterministic — same bytes every time).
+# 2. Regenerate the seed data (deterministic - same bytes every time).
 python tools/generate_seed.py
 ```
 
@@ -54,6 +54,12 @@ Expected output:
 
 ## Layout
 
+The following tree shows the repository layout, including source files, generated
+data, query examples, expected outputs, and the local build directory.
+
+<details>
+<summary>Original repository layout (ASCII)</summary>
+
 ```
 sql-work-sample/
 ├── schema.sql                 table definitions (tables only — see below)
@@ -64,6 +70,8 @@ sql-work-sample/
 ├── run_checks.py              build + run + compare harness
 └── build/                     generated database (not committed)
 ```
+
+</details>
 
 **Why the index is not in `schema.sql`.** `schema.sql` builds the tables and nothing
 else, so that the effect of adding an index can be *observed* in query 07 rather than
@@ -76,6 +84,7 @@ impossible to run.
 
 Five tables. `tickets` is the fact table; the rest are dimensions or interval-level
 volumes.
+Here, `fcr` means first-contact resolution, and CSAT means customer satisfaction.
 
 | Table | Grain | Key columns |
 |---|---|---|
@@ -85,15 +94,15 @@ volumes.
 | `tickets` | one row per contact | `ticket_id`, `created_at`, `resolved_at`, `queue_id` → `queues`, `agent_id` → `agents`, `status`, `channel`, `fcr`, `csat_score`, `handle_seconds`, `wait_seconds` |
 | `interval_volumes` | one row per queue per week | `interval_id`, `interval_start`, `queue_id` → `queues`, `offered`, `answered`, `abandoned` |
 
-Integrity is enforced in the schema, not in the loader: `CHECK` constraints cover every
-enumerated column (`status`, `channel`, `employment_type`, the 1–5 CSAT band), foreign
-keys are declared, and `interval_volumes` carries a `UNIQUE (interval_start, queue_id)`
-so a week cannot be double-counted for a queue.
+Integrity is enforced in the schema, not in the loader. `CHECK` constraints cover every
+enumerated column (`status`, `channel`, `employment_type`, and the 1-to-5 CSAT band).
+Foreign keys are declared, and `interval_volumes` has a `UNIQUE` constraint on
+`interval_start` and `queue_id` to prevent double-counting a week for a queue.
 
-**Two columns are deliberately nullable, and both carry meaning:**
+### Two columns are deliberately nullable, and both carry meaning
 
 - `tickets.agent_id` is `NULL` for abandoned contacts. Nobody handled them, so there is
-  nobody to attribute them to. This is not missing data — it is the row class that makes
+  nobody to attribute them to. This is not missing data - it is the row class that makes
   query 02's cardinality explanation worth writing.
 - `tickets.csat_score` is `NULL` when no survey was returned (411 of 1,122 tickets carry a
   score). Treating an absent survey as a low score would corrupt every average, which is
@@ -103,12 +112,14 @@ so a week cannot be double-counted for a queue.
 
 ## Queries
 
+The following table maps each query file to the SQL concepts it demonstrates and the business question it answers.
+
 | # | File | Demonstrates | The question it answers |
 |---|---|---|---|
 | 01 | `01_basic_select.sql` | `SELECT` / `WHERE` / `ORDER BY` / `LIMIT` | Which still-open contacts have waited longest? |
 | 02 | `02_filtered_join.sql` | filtered two-table `INNER JOIN`, and its cardinality | Which of Team Bravo's long phone contacts took the most time? |
 | 03 | `03_group_by_having.sql` | `GROUP BY`, `HAVING`, `WHERE`-vs-`HAVING` | Which agents underperform on CSAT, once small samples are excluded? |
-| 04 | `04_cte_service_level.sql` | multi-step CTE chain | Which queues miss their service-level target? |
+| 04 | `04_cte_service_level.sql` | multi-step common table expression (CTE) chain | Which queues miss their service-level target? |
 | 05 | `05_window_rank_within_team.sql` | `RANK()` / `AVG() OVER (PARTITION BY …)` | How does each agent rank against their own team? |
 | 06 | `06_window_rolling_7day.sql` | window frame (`ROWS BETWEEN 6 PRECEDING …`) | What does daily volume look like with the noise smoothed? |
 | 07 | `07_index_and_query_plan.sql` | `CREATE INDEX` + `EXPLAIN QUERY PLAN` | Does an index actually change the plan? |
@@ -124,10 +135,10 @@ tickets.agent_id -> agents.agent_id   is MANY-TO-ONE
 
 A many-to-one join **cannot multiply rows**. So `tickets JOIN agents` returns at most one
 row per ticket. The only way the joined count can differ from the ticket count is if a
-ticket has no matching agent — which is precisely what happens: 43 abandoned contacts
+ticket has no matching agent - which is precisely what happens: 43 abandoned contacts
 carry `agent_id IS NULL`, and an `INNER JOIN` drops them silently.
 
-Measured, not assumed — statement 1 of query 02 reports:
+Measured, not assumed - statement 1 of query 02 reports:
 
 ```
 tickets_total | tickets_without_agent | tickets_joinable
@@ -135,7 +146,7 @@ tickets_total | tickets_without_agent | tickets_joinable
 ```
 
 So the join is bounded at **1,079 rows**. If it ever returned more, the join would be
-wrong — a `LEFT JOIN` or a duplicated dimension row. The check is in the query file, so
+wrong - a `LEFT JOIN` or a duplicated dimension row. The check is in the query file, so
 it runs every time.
 
 ### Why `HAVING` and not `WHERE` (query 03)
@@ -144,7 +155,7 @@ The two predicates are different kinds of thing and SQL evaluates them at differ
 stages:
 
 - **`WHERE` runs before grouping and filters rows.** `t.csat_score IS NOT NULL` belongs
-  here — it decides which individual survey rows enter the aggregate. It could not be
+  here - it decides which individual survey rows enter the aggregate. It could not be
   expressed in `HAVING`, because `HAVING` cannot see individual rows.
 - **`HAVING` runs after grouping and filters groups.** `COUNT(*) >= 5` and
   `AVG(t.csat_score) < 4.1` are properties of a group, not of any row, so they cannot be
@@ -160,14 +171,14 @@ ranks bottom and the result is an artefact of sample size rather than a finding.
 Measured on this dataset (1,122 tickets, SQLite 3.53.1). The full report is in
 `expected/query_plan.txt`.
 
-**Without `idx_tickets_created_at`:**
+### Without `idx_tickets_created_at`
 
 ```
 SCAN tickets
 USE TEMP B-TREE FOR GROUP BY
 ```
 
-**With `idx_tickets_created_at`:**
+### With `idx_tickets_created_at`
 
 ```
 SEARCH tickets USING COVERING INDEX idx_tickets_created_at (created_at>? AND created_at<?)
@@ -177,11 +188,11 @@ USE TEMP B-TREE FOR GROUP BY
 Three things are worth reading off that:
 
 1. The plan changed from a full table **scan** to an indexed **search** over the range.
-2. It is a **covering** index — the query needs only `created_at`, so SQLite answers it
+2. It is a **covering** index - the query needs only `created_at`, so SQLite answers it
    from the index alone and never touches the table.
 3. **The row count did not change.** The index changes *how* rows are found, never
    *which* rows come back. That is why `run_checks.py` asserts both the plan change and
-   the unchanged result set — an index that altered the results would be a bug, not an
+   the unchanged result set - an index that altered the results would be a bug, not an
    optimisation.
 
 The `USE TEMP B-TREE FOR GROUP BY` step survives in both plans: the index orders by
@@ -205,7 +216,7 @@ python run_checks.py --update-expected
 A silent change in output is exactly what these checks exist to catch.
 
 **Determinism.** The seed is generated from a fixed seed (`20261004`) through a private
-`random.Random` instance, so regenerating produces byte-identical SQL — verified by
+`random.Random` instance, so regenerating produces byte-identical SQL - verified by
 checksum. Three consecutive `run_checks.py` runs produce identical results. Every
 `ORDER BY` that could tie carries an explicit tiebreaker (`ticket_id`, `agent_id`), so
 `LIMIT` cuts and `RANK()` positions are stable.
@@ -214,15 +225,17 @@ checksum. Three consecutive `run_checks.py` runs produce identical results. Ever
 
 ## Assumptions, stated
 
+The following table lists the dataset choices that establish the work sample's business context and test expectations.
+
 | Assumption | Where it lives |
 |---|---|
 | Two full calendar months (2026-08-01 … 2026-09-30) so month-over-month comparison is well defined | `tools/generate_seed.py` |
-| September waits are generated **15% lower** than August waits — a deliberate, documented trend so query 08 has a real change to find | `tools/generate_seed.py` |
+| September waits are generated **15% lower** than August waits - a deliberate, documented trend so query 08 has a real change to find | `tools/generate_seed.py` |
 | Per-agent quality offsets are **fixed**, so query 03 returns a small stable set rather than an empty one | `tools/generate_seed.py` |
 | Abandoned contacts are never assigned an agent | schema + generator |
 | CSAT is only present when a survey was returned (≈45% of resolved tickets) | generator |
 | Service level is computed per queue against that queue's **own** target, not a global one | query 04 |
-| The rolling 7-day window averages whatever exists at the left edge rather than returning `NULL` for the first six days | query 06 — noted in the file |
+| The rolling 7-day window averages whatever exists at the left edge rather than returning `NULL` for the first six days | query 06 - noted in the file |
 
 ---
 
@@ -238,7 +251,7 @@ checksum. Three consecutive `run_checks.py` runs produce identical results. Ever
   built once and read.
 - **No window-function frame beyond `ROWS`.** `RANGE` and `GROUPS` frames are not used.
 - **This is a work sample, not experience.** It was built in one sitting against invented
-  data. It demonstrates that the SQL can be written and explained — nothing more.
+  data. It demonstrates that the SQL can be written and explained - nothing more.
 
 ---
 

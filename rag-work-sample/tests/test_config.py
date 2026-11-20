@@ -10,6 +10,7 @@ from support_assistant.config import ENV_PREFIX, SERVICE_NAME, SERVICE_VERSION, 
 
 def test_defaults_are_safe() -> None:
     settings = Settings.from_env({})
+    assert settings.host == "127.0.0.1"
     assert settings.port == 8080
     assert settings.generator == "mock"
     # The important default: query text is not logged.

@@ -129,6 +129,10 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- helpers ---------------------------------------------------------------
 
+    def setup(self) -> None:
+        self.request.settimeout(self.application.settings.client_timeout_seconds)
+        super().setup()
+
     def _send_json(
         self, status: HTTPStatus, payload: dict[str, Any], request_id: str
     ) -> None:
@@ -137,6 +141,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header(REQUEST_ID_HEADER, request_id)
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(body)
 
@@ -172,12 +178,16 @@ class Handler(BaseHTTPRequestHandler):
         short read or a timeout ends the drain early and the 413 still goes out.
         """
         remaining = min(length, DRAIN_LIMIT_BYTES)
+        if length > DRAIN_LIMIT_BYTES:
+            self.close_connection = True
         while remaining > 0:
             try:
                 chunk = self.rfile.read(min(remaining, DRAIN_CHUNK_BYTES))
             except (OSError, ValueError):
+                self.close_connection = True
                 return
             if not chunk:
+                self.close_connection = True
                 return
             remaining -= len(chunk)
 

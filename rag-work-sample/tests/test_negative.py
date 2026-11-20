@@ -20,6 +20,7 @@ from support_assistant import (
     ConsequentialAction,
     Corpus,
     Decision,
+    DecisionReason,
     GenerationError,
     MockAnswerGenerator,
     Procedure,
@@ -151,6 +152,9 @@ async def test_generator_failure_escalates_instead_of_answering(corpus: Corpus) 
     )
     assert response.answer_text is None
     assert response.answer_source == "none"
+    assert response.decision is Decision.ESCALATE
+    assert response.reason is DecisionReason.GENERATOR_FAILED
+    assert response.gate.decision is Decision.ANSWER
     assert "generator failed" in " ".join(response.notes)
 
 

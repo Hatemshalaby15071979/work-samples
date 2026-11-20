@@ -8,6 +8,7 @@ rather than calling functions directly.
 from __future__ import annotations
 
 import json
+import socket
 import threading
 import urllib.error
 import urllib.request
@@ -222,6 +223,29 @@ def test_oversized_body_returns_413(base_url: str) -> None:
     with pytest.raises(urllib.error.HTTPError) as error:
         urllib.request.urlopen(request, timeout=10)
     assert error.value.code == 413
+
+
+def test_incomplete_oversized_body_times_out_and_closes_connection() -> None:
+    settings = _settings(client_timeout_seconds=0.1)
+    server = build_server(settings, bind_port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with socket.create_connection(server.server_address, timeout=2) as client:
+            client.settimeout(2)
+            client.sendall(
+                b"POST /ask HTTP/1.1\r\n"
+                b"Host: localhost\r\n"
+                b"Content-Length: 8388609\r\n"
+                b"\r\n"
+            )
+            response = client.recv(4096)
+        assert b"413" in response
+        assert b"Connection: close" in response
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 def test_ask_on_a_get_request_is_not_found(base_url: str) -> None:

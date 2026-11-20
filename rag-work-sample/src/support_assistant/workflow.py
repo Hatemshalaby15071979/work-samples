@@ -234,6 +234,8 @@ class SupportAssistant:
         answer_source: AnswerSource = "none"
         proposed_action: ConsequentialAction | None = None
         approval: ApprovalRecord | None = None
+        decision = outcome.decision
+        reason = outcome.reason
 
         if (
             outcome.decision is Decision.ANSWER
@@ -254,6 +256,8 @@ class SupportAssistant:
                 # A generator failure must not become a silent answer.
                 answer_text = None
                 answer_source = "none"
+                decision = Decision.ESCALATE
+                reason = DecisionReason.GENERATOR_FAILED
                 notes.append(f"generator failed, escalated: {error}")
 
         # Consequential actions are proposed, never executed here.
@@ -267,8 +271,8 @@ class SupportAssistant:
 
         return AssistantResponse(
             request_id=request.request_id or request.query[:32],
-            decision=outcome.decision,
-            reason=outcome.reason,
+            decision=decision,
+            reason=reason,
             answer_text=answer_text,
             citations=citations,
             proposed_action=proposed_action,
