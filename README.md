@@ -8,6 +8,11 @@
 
 </div>
 
+<p float="left">
+  <strong>Work Samples<br></strong><br>
+  <span style="font-size:0.9em;color:#93aaa0">by Helix Solutions</span>
+</p>
+
 > Evidence before claims. Offline by default. A human is always in charge.
 
 Each sample below is a complete, runnable unit — no dependencies, no cloud, no credentials.
