@@ -9,7 +9,7 @@
 </div>
 
 <p float="left">
-  <strong>Work Samples<br></strong><br>
+  <strong>Work Samples</strong><br>
   <span style="font-size:0.9em;color:#93aaa0">by Helix Solutions</span>
 </p>
 
