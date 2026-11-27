@@ -81,3 +81,19 @@ Verification: Planned — `python3 scripts/check_root_docs.py` and `--self-test`
 Left undone: Nothing at sign-in.
 
 Sensitive: `git push origin main` (owner's instruction in chat, 2026-11-27). No force push, no history rewrite, no secrets.
+
+## [2026-11-27 04:57 EET] — sami (OpenMausBot), owner-authorised governance landing
+
+STATUS: SIGN-OUT (landing complete)
+
+Task: Bring this repository onto the portfolio governance standard. Done.
+
+Touched: `AGENTS.md`, `CHANGELOG.md`, `CONSTITUTION.md`, `GOVERNANCE.md`, `SECURITY.md` (all new); `scripts/check_root_docs.py` (new, md5 `35fc37ab16ff4461a33d4e2dcaedb7bf`, byte-identical to the copy in Assay, createlee, Helix-Solutions, Helix-Matrix and Helix-Codex); `SHIPMENT_READINESS.md` → `docs/archive/SHIPMENT_READINESS.md`; `.github/workflows/ci.yml` (one new `governance` job). Nothing deleted.
+
+Why: The repository had a product and a README but no written policy for agents, no ledger, no security policy, and a dated one-off report at the root. The five governance repositories now share one rule and one gate; this repository had neither.
+
+Verification: `python3 scripts/check_root_docs.py` → "OK — work-samples/ holds only the GOVERNANCE.md section 2 set" (7 table rows, 7 allowed root documents); `--self-test` → 7/7 cases behaved (a planted `STRAY-NOTE.md` and `NOTES.txt` each stop the gate, a missing required document stops it, `requirements.txt` at the root is acknowledged as a non-document, a stray under `docs/` is ignored, and an unparsable section 2 fails closed). The `governance` job parses as valid YAML and lists as a sixth job. The samples' own checks, run with the versions the workflow pins (ruff 0.16.1): `rag-work-sample` — 106 pytest passed, ruff format clean (23 files), ruff check "All checks passed!", mypy "no issues found in 10 source files", evaluation report matches `expected/eval_report.txt`; `sql-work-sample` — 8/8 checks passed. The container step reports "command not found: docker" here because this workspace has no Docker; that step belongs to the repository's own CI runner, not to this landing. Note for the next agent: the workspace's system ruff is 0.1.15 and reports three spurious E402 findings in `rag-work-sample/run_eval.py`; with the pinned 0.16.1 the same tree is clean — do not "fix" those.
+
+Left undone: Nothing failing. CI on `9db56ac` and the sign-out commit is the record of the same steps on a clean runner.
+
+Sensitive: `git push origin main` (owner's instruction in chat, 2026-11-27). No force push, no history rewrite, no secrets.
